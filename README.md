@@ -1,114 +1,141 @@
-# ONYE-AI-FHIR Take-Home Assessment
+# ONYE-AI-FHIR Query Tool
 
-This repository contains a full-stack application for querying simulated healthcare data using natural language, integrating AI (NLP), and showcasing a user-friendly frontend. It also includes a security and compliance plan, Internationalization (i18n) for the UI, and Docker containerization.
+This project provides an AI-powered query tool for FHIR data, consisting of a Python backend (Flask) and a Next.js frontend.
 
-## Project Structure
+---
 
-* `.venv/`: Python virtual environment (for local backend development).
-* `frontend/`: Contains the React/Next.js frontend UI.
-* `main.py`: The Python Flask backend service for NLP integration and simulated FHIR data querying.
-* `requirements.txt`: Python dependencies for the backend.
-* `Dockerfile`: Dockerfile for containerizing the Python Flask backend.
-* `docker-compose.yml`: Defines how to build and run both the backend and frontend services using Docker Compose.
-* `SECURITY_PLAN.md`: Technical document outlining security and HIPAA compliance measures.
-* `README.md`: This overall project README.
-* `BACKEND_README.md`: Detailed README for the backend component.
-* `frontend/README.md`: Detailed README for the frontend component.
+## Running the Application Without Docker (Local Development)
 
-## Setup and Running Instructions
+This guide explains how to set up and run the frontend and backend services directly on your local machine for development purposes.
 
-**Prerequisites:**
-* Python 3.9+
-* Node.js 18+ and npm/yarn
-* Docker Desktop (installed and running with user logged in)
+### Prerequisites
 
-### Option 1: Running with Docker Compose (Recommended)
+Before you start, ensure you have the following installed on your system:
 
-This is the easiest way to get both services running together.
+* **Python 3.9+**:
+    * [Download Python](https://www.python.org/downloads/)
+* **Node.js (LTS version recommended) and npm/yarn**:
+    * [Download Node.js](https://nodejs.org/en/download/) (npm is installed with Node.js)
+    * [Install Yarn (optional, but used in some commands)](https://yarnpkg.com/getting-started/install)
+* **Git**:
+    * [Download Git](https://git-scm.com/downloads) (usually pre-installed on macOS/Linux)
 
-1.  **Clone the repository:**
+### 1. Clone the Repository
+
+First, open your terminal or command prompt and clone the project repository:
+
+```bash
+git clone https://github.com/TejasNaik24/onye-AI-FHIR # Replace with the actual URL of your Git repository
+cd ONYE-AI-FHIR # Navigate into the project's root directory
+```
+
+### 2. Set Up and Run the Backend
+
+The backend is a Flask application that handles the AI query logic and interacts with FHIR data.
+
+#### Install Python Dependencies
+
+1.  Navigate into the `backend` directory:
     ```bash
-    git clone <your-repo-link>
-    cd ONYE-AI-FHIR
+    cd backend
     ```
-2.  **Build and run all services:**
+2.  **Create a Python virtual environment (Highly Recommended)**:
+    This isolates your project's dependencies from other Python projects.
     ```bash
-    docker-compose up --build
+    python3 -m venv venv
     ```
-    * **Note on potential Docker login issue:** If you encounter a `401 Unauthorized` error during the build, ensure Docker Desktop is running and you are properly logged in within the Docker Desktop application itself. If it persists, there might be a system-level Docker credential issue on your machine that requires troubleshooting independent of the project code.
-    * The backend will be accessible on `http://localhost:5000` (within the Docker network, the frontend communicates with it via `http://backend:5000`).
-    * The frontend will be accessible on `http://localhost:3000`.
+3.  **Activate the virtual environment**:
+    * **On macOS/Linux**:
+        ```bash
+        source venv/bin/activate
+        ```
+    * **On Windows (Command Prompt)**:
+        ```bash
+        venv\Scripts\activate.bat
+        ```
+    * **On Windows (PowerShell)**:
+        ```bash
+        .\venv\Scripts\Activate.ps1
+        ```
+    (You'll know it's active when `(venv)` appears before your terminal prompt.)
 
-### Option 2: Running without Docker (Manual Local Setup)
-
-1.  **Clone the repository:**
+4.  **Install the required Python packages**:
     ```bash
-    git clone <your-repo-link>
-    cd ONYE-AI-FHIR
+    pip install -r requirements.txt
+    ```
+5.  **Download the spaCy English language model**:
+    This model is necessary for the AI processing.
+    ```bash
+    python -m spacy download en_core_web_sm
     ```
 
-2.  **Setup and run the Backend (Python Flask):**
-    * Navigate to the root project directory:
-        ```bash
-        cd ONYE-AI-FHIR
-        ```
-    * Create and activate a virtual environment:
-        ```bash
-        python3 -m venv .venv
-        source .venv/bin/activate
-        ```
-    * Install Python dependencies:
-        ```bash
-        pip install -r requirements.txt
-        ```
-    * Download spaCy language model:
-        ```bash
-        python -m spacy download en_core_web_sm
-        ```
-    * Run the Flask application:
-        ```bash
-        python main.py
-        ```
-        (Keep this terminal window open and running.)
+#### Run the Backend Server
 
-3.  **Setup and run the Frontend (React/Next.js):**
-    * Open a **new, separate terminal window**.
-    * Navigate to the frontend directory:
-        ```bash
-        cd ONYE-AI-FHIR/frontend
-        ```
-    * Install Node.js dependencies:
+While still in the `backend` directory and with your virtual environment activated:
+
+```bash
+python main.py
+```
+This will start the Flask backend server, typically on `http://127.0.0.1:5001`. Keep this terminal window open and running.
+
+### 3. Set Up and Run the Frontend
+
+The frontend is a Next.js application that provides the user interface for the query tool.
+
+#### Install Node.js Dependencies
+
+1.  Navigate into the `frontend` directory. If you're in the `backend` directory, go up one level then into `frontend`:
+    ```bash
+    cd ../frontend
+    ```
+    (Alternatively, if you're already in the project root: `cd frontend`)
+
+2.  **Install the Node.js packages**. You can use either `npm` (Node Package Manager) or `yarn`:
+
+    * **Using npm**:
         ```bash
         npm install
         ```
-    * Run the development server:
+    * **Using yarn**:
         ```bash
-        npm run dev
+        yarn install # Use --frozen-lockfile if you have a yarn.lock file and want exact dependencies
         ```
-        (Keep this terminal window open and running.)
 
-## Deliverables Overview
+#### Configure Backend URL for Frontend
 
-* **Backend & NLP Integration:** See `BACKEND_README.md` for details.
-* **Front-End UI:** See `frontend/README.md` for details.
-* **Security & Compliance:** See `SECURITY_PLAN.md` for the detailed plan.
-* **Bonus - Internationalization (i18n):** Implemented in `frontend/src/app/page.tsx` and `frontend/public/locales/`.
-* **Bonus - Docker Containerization:** `Dockerfile` (for backend), `frontend/Dockerfile` (for frontend), and `docker-compose.yml`.
+The frontend needs to know the address of the backend. When running locally without Docker, the frontend will call `localhost`.
 
-## Notes on What I Focused On / Would Improve
+1.  Open or create a file named `.env.local` in your `frontend` directory.
+2.  Add or update the following line in the `.env.local` file:
+    ```dotenv
+    NEXT_PUBLIC_BACKEND_URL=http://localhost:5001
+    ```
+    *Note: I use port `5001` for the backend here to avoid potential conflicts with other services that might use `5000` by default. Your backend's `main.py` should be configured to listen on this port.*
 
-### What I Focused On:
-* **Core Functionality:** Successfully converting natural language queries into simulated FHIR requests and displaying results.
-* **User Experience:** Providing a clear UI with query auto-complete/suggestions and intuitive data visualization (charts & table).
-* **Security Foundation:** Outlining a comprehensive security plan addressing HIPAA requirements.
-* **Demonstrability:** Ensuring the project is easy to set up and run with clear instructions and Docker support.
-* **Scalability & Maintainability:** Using a modular project structure and standard, widely adopted technologies (Flask, Next.js, spaCy).
-* **Internationalization:** Implementing multi-language support for better accessibility.
+#### Run the Frontend Development Server
 
-### What I Would Improve with More Time:
-* **Advanced NLP:** Implement more sophisticated intent recognition and entity extraction using custom spaCy models or fine-tuned transformer models for higher accuracy and broader coverage. Integrate with a clinical terminology service (like SNOMED CT or LOINC) for standardized code mapping.
-* **Richer FHIR Simulation:** Implement a more comprehensive FHIR server simulation with a larger and more diverse dataset. Support more FHIR resources (e.g., `Observation`, `MedicationRequest`, `DiagnosticReport`) and complex search parameters.
-* **Enhanced Frontend:** Implement client-side filters, more interactive charts, robust error handling, and accessibility improvements.
-* **Authentication Integration:** For a real application, integrate with a dummy OAuth 2.0 / SMART on FHIR server (e.g., Keycloak) to demonstrate actual authentication flows and consent.
-* **Comprehensive Testing:** Add extensive unit, integration, and end-to-end tests for both backend and frontend components.
-* **Deployment Automation:** Set up CI/CD pipelines for automated testing and deployment to cloud platforms.
+While still in the `frontend` directory:
+
+* **Using npm**:
+    ```bash
+    npm run dev
+    ```
+* **Using yarn**:
+    ```bash
+    yarn dev
+    ```
+This will start the Next.js development server, usually on `http://localhost:3000`. Keep this terminal window open and running.
+
+### 4. Access the Application
+
+Once both the backend and frontend servers are running successfully (each in their own terminal window), open your web browser and navigate to:
+
+`http://localhost:3000`
+
+You should now be able to interact with the AI on FHIR Query Tool.
+
+---
+
+### Future Development
+
+This project includes Dockerfiles for containerization. I plan to further refine and document the `docker-compose.yml` setup for easier deployment and streamlined development environments using Docker in the future.
