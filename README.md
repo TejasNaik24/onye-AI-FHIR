@@ -21,6 +21,7 @@ Before you start, ensure you have the following installed on your system:
     * [Download Git](https://git-scm.com/downloads) (usually pre-installed on macOS/Linux)
 
 ### 1. Clone the Repository
+You can follow this [video](https://drive.google.com/file/d/1WdDehCanRc4PiICoQSawgFukOykdHKO6/view?usp=sharing) here for the setup or read below:
 
 First, open your terminal or command prompt and clone the project repository:
 
