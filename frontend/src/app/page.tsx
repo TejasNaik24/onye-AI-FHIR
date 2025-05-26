@@ -3,12 +3,36 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+// --- i18n Imports ---
+import i18n from 'i18next';
+import { initReactI18next, useTranslation } from 'react-i18next';
+// Import your translation files directly
+import enCommon from '../../public/locales/en/common.json';
+import esCommon from '../../public/locales/es/common.json';
+import frCommon from '../../public/locales/fr/common.json'; // Add if you're including French
 
-// Register Chart.js components. This is essential for the charts to render correctly.
+// Configure i18next
+i18n
+  .use(initReactI18next) // passes i18n down to react-i18next
+  .init({
+    resources: {
+      en: { common: enCommon }, // 'common' is our namespace
+      es: { common: esCommon },
+      fr: { common: frCommon }, // Add French resources
+    },
+    lng: 'en', // default language
+    fallbackLng: 'en', // fallback language if translation is missing
+    defaultNS: 'common', // default namespace to use
+    interpolation: {
+      escapeValue: false, // react already protects against XSS
+    },
+  });
+
+
+// Register Chart.js components.
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 // --- Interface Definitions for Data Structure ---
-// THESE ARE THE ONES THAT NEED TO BE AT THE TOP LEVEL OF YOUR FILE
 interface Patient {
     id: string;
     name: string;
@@ -19,7 +43,7 @@ interface Patient {
 
 interface FHIRResponse {
     resourceType: string;
-    entry: { resource: any }[]; // 'any' because resource type can be Patient or Condition
+    entry: { resource: any }[];
 }
 
 interface NLPParse {
@@ -35,7 +59,7 @@ interface BackendResponse {
     simulated_fhir_response: FHIRResponse;
 }
 
-// NEW INTERFACES FOR TABLE DATA - ADDED HERE
+// NEW INTERFACES FOR TABLE DATA
 interface PatientTableData {
     name: string;
     age: number;
@@ -47,31 +71,35 @@ interface ConditionTableData {
     patientName: string;
     condition: string;
 }
-// END OF NEW INTERFACES
 
-// --- Example Query Suggestions for Auto-complete ---
-const querySuggestions = [
-    "Show me all diabetic patients over 50",
-    "Patients over 60 with hypertension",
-    "Female patients with asthma",
-    "What conditions does Alice Smith have?",
-    "Patients over 70",
-    "Male patients",
-    "All patients"
+// --- Example Query Suggestion KEYS for Auto-complete ---
+// These are now keys that will be translated by i18next
+const querySuggestionKeys = [
+    "suggestion_diabetic_over_50",
+    "suggestion_hypertension_over_60",
+    "suggestion_female_asthma",
+    "suggestion_alice_smith_conditions",
+    "suggestion_patients_over_70",
+    "suggestion_male_patients",
+    "suggestion_all_patients"
 ];
 
 // --- Main Home Component ---
 export default function Home() {
-    // State variables to manage UI and data
+    const { t } = useTranslation('common'); // Initialize useTranslation with the 'common' namespace
     const [query, setQuery] = useState<string>('');
     const [results, setResults] = useState<BackendResponse | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [showSuggestions, setShowSuggestions] = useState<boolean>(false); // State to control suggestion visibility
-    const inputRef = useRef<HTMLInputElement>(null); // Ref for input field to help with click-outside logic
+    const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [currentLocale, setCurrentLocale] = useState(i18n.language); // To track and display current language
 
-    // Filter suggestions based on current query input for auto-complete
-    const filteredSuggestions = querySuggestions.filter(s =>
+
+    // Translate the suggestion keys first, then filter based on the translated text
+    const translatedSuggestions = querySuggestionKeys.map(key => t(key));
+
+    const filteredSuggestions = translatedSuggestions.filter(s =>
         s.toLowerCase().includes(query.toLowerCase())
     );
 
@@ -97,16 +125,17 @@ export default function Home() {
 
             if (!response.ok) {
                 // Handle HTTP errors (e.g., 404, 500)
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Use translated error message
+                throw new Error(`${t('error_fetch_failed')} ${response.status}`);
             }
 
             const data: BackendResponse = await response.json();
             setResults(data); // Set the results received from the backend
         } catch (err: any) {
-            setError(`Failed to fetch data: ${err.message}`); // Display fetch errors
+            setError(`${t('error_fetch_failed')} ${err.message}`); // Display fetch errors
             console.error("Error fetching data:", err);
         } finally {
-            setLoading(false); // End loading state
+            setLoading(false);
         }
     };
 
@@ -132,6 +161,14 @@ export default function Home() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Function to change the language
+    const handleLocaleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newLocale = e.target.value;
+        i18n.changeLanguage(newLocale); // Change the i18n language
+        setCurrentLocale(newLocale); // Update state to reflect change in UI
+    };
+
 
     // --- Chart Data Preparation Functions ---
 
@@ -159,7 +196,7 @@ export default function Home() {
             labels: Object.keys(ageGroups),
             datasets: [
                 {
-                    label: 'Number of Patients',
+                    label: t('table_header_name'), // Example: Using a translation key for chart label
                     data: Object.values(ageGroups),
                     backgroundColor: 'rgba(75, 192, 192, 0.6)',
                     borderColor: 'rgba(75, 192, 192, 1)',
@@ -202,7 +239,7 @@ export default function Home() {
             labels: Object.keys(conditionCounts),
             datasets: [
                 {
-                    label: 'Condition Distribution',
+                    label: t('condition_distribution'),
                     data: Object.values(conditionCounts),
                     backgroundColor: Object.keys(conditionCounts).map((_, i) => backgroundColors[i % backgroundColors.length]),
                     borderColor: Object.keys(conditionCounts).map((_, i) => backgroundColors[i % backgroundColors.length].replace('0.6', '1')),
@@ -211,6 +248,9 @@ export default function Home() {
             ],
         };
     };
+
+    const ageData = getAgeDistributionData();
+    const conditionData = getConditionDistributionData();
 
     // --- Function to prepare data for the results table ---
     const getTableData = () => {
@@ -221,7 +261,7 @@ export default function Home() {
             return results.simulated_fhir_response.entry
                 .map(e => e.resource)
                 .filter(r => r.resourceType === "Patient")
-                .map((p: Patient): PatientTableData => ({ // Explicitly type 'p' as Patient and return type as PatientTableData
+                .map((p: Patient): PatientTableData => ({
                     name: p.name,
                     age: p.age,
                     gender: p.gender,
@@ -232,24 +272,31 @@ export default function Home() {
             return results.simulated_fhir_response.entry
                 .map(e => e.resource)
                 .filter(r => r.resourceType === "Condition")
-                .map((c: any): ConditionTableData => ({ // Explicitly type 'c' and return type as ConditionTableData
-                    patientName: c.subject?.display || 'N/A', // Assuming 'subject.display' holds patient name
-                    condition: c.code?.text || 'N/A' // Assuming 'code.text' holds condition name
+                .map((c: any): ConditionTableData => ({
+                    patientName: c.subject?.display || 'N/A',
+                    condition: c.code?.text || 'N/A'
                 }));
         }
         return []; // Return empty array if no relevant data
     };
 
-    const ageData = getAgeDistributionData();
-    const conditionData = getConditionDistributionData();
     const tableData = getTableData();
 
     // --- UI Structure (JSX) ---
     return (
         <main className="flex min-h-screen flex-col items-center p-24 bg-gray-100 text-gray-800">
-            <h1 className="text-4xl font-bold mb-8 text-blue-700">AI on FHIR Query Tool</h1>
+            <h1 className="text-4xl font-bold mb-8 text-blue-700">{t('title')}</h1>
 
-            {/* Query Input Form with Auto-complete/Suggestions */}
+            {/* Language Selector */}
+            <div className="mb-4 self-end"> {/* self-end to push it to the right */}
+                <label htmlFor="locale-select" className="mr-2 text-gray-700">{t('language')}:</label>
+                <select id="locale-select" value={currentLocale} onChange={handleLocaleChange} className="p-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option> {/* Added French option */}
+                </select>
+            </div>
+
             <form onSubmit={handleSubmit} className="w-full max-w-2xl mb-8 relative">
                 <input
                     ref={inputRef}
@@ -257,11 +304,11 @@ export default function Home() {
                     value={query}
                     onChange={(e) => {
                         setQuery(e.target.value);
-                        setShowSuggestions(true); // Show suggestions as user types
+                        setShowSuggestions(true);
                     }}
-                    onFocus={() => setShowSuggestions(true)} // Show suggestions when input is focused
+                    onFocus={() => setShowSuggestions(true)}
                     className="w-full p-4 border border-blue-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
-                    placeholder="e.g., Show me all diabetic patients over 50"
+                    placeholder={t('placeholder_query')}
                 />
                 {showSuggestions && filteredSuggestions.length > 0 && (
                     <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg suggestions-list">
@@ -271,6 +318,7 @@ export default function Home() {
                                 className="p-3 hover:bg-blue-100 cursor-pointer border-b border-gray-200 last:border-b-0"
                                 onClick={() => handleSuggestionClick(suggestion)}
                             >
+                                {/* Display the already translated suggestion */}
                                 {suggestion}
                             </li>
                         ))}
@@ -279,76 +327,71 @@ export default function Home() {
                 <button
                     type="submit"
                     className="mt-4 w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 text-lg"
-                    disabled={loading} // Disable button when loading
+                    disabled={loading}
                 >
-                    {loading ? 'Processing...' : 'Query FHIR Data'}
+                    {loading ? t('processing_button') : t('submit_button')} {/* Use translated button text */}
                 </button>
             </form>
 
-            {/* Error Display */}
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <strong className="font-bold">Error!</strong>
+                    <strong className="font-bold">{t('error_prefix')}</strong>
                     <span className="block sm:inline"> {error}</span>
                 </div>
             )}
 
-            {/* Results Display Area */}
             {results && (
                 <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
-                    <h2 className="text-2xl font-semibold mb-4 text-blue-600">Query Results</h2>
+                    <h2 className="text-2xl font-semibold mb-4 text-blue-600">{t('results_title')}</h2>
 
-                    {/* NLP Parse Info (for debugging/understanding) */}
+                    {/* NLP Parse Info */}
                     <div className="mb-6 p-4 bg-blue-50 rounded-md">
-                        <h3 className="text-xl font-medium mb-2 text-blue-800">NLP Analysis:</h3>
-                        <p><strong>Intent:</strong> {results.nlp_parse.intent}</p>
-                        <p><strong>Resource Type:</strong> {results.nlp_parse.resource_type}</p>
-                        <p><strong>FHIR Parameters:</strong> {JSON.stringify(results.nlp_parse.fhir_params)}</p>
-                        <p><strong>Simulated FHIR Request URL:</strong> <code className="bg-gray-200 p-1 rounded text-sm">{results.nlp_parse.simulated_fhir_request_url}</code></p>
+                        <h3 className="text-xl font-medium mb-2 text-blue-800">{t('nlp_analysis')}</h3>
+                        <p><strong>{t('intent')}</strong> {results.nlp_parse.intent}</p>
+                        <p><strong>{t('resource_type')}</strong> {results.nlp_parse.resource_type}</p>
+                        <p><strong>{t('fhir_parameters')}</strong> {JSON.stringify(results.nlp_parse.fhir_params)}</p>
+                        <p><strong>{t('simulated_fhir_request_url')}</strong> <code className="bg-gray-200 p-1 rounded text-sm">{results.nlp_parse.simulated_fhir_request_url}</code></p>
                     </div>
 
-                    {/* Charts Display */}
+                    {/* Charts */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                        {/* Show Age Distribution only if the query was for Patient resources */}
                         {ageData && results.nlp_parse.resource_type === "Patient" && (
                             <div className="bg-gray-50 p-4 rounded-md shadow-inner">
-                                <h3 className="text-xl font-medium mb-2 text-blue-800">Patient Age Distribution</h3>
-                                <Bar data={ageData} options={{ responsive: true, plugins: { title: { display: true, text: 'Patient Age Distribution' } } }} />
+                                <h3 className="text-xl font-medium mb-2 text-blue-800">{t('patient_age_distribution')}</h3>
+                                <Bar data={ageData} options={{ responsive: true, plugins: { title: { display: true, text: t('patient_age_distribution') } } }} />
                             </div>
                         )}
-                        {/* Show Condition Distribution for both Patient and Condition queries */}
                         {conditionData && (
                             <div className="bg-gray-50 p-4 rounded-md shadow-inner">
-                                <h3 className="text-xl font-medium mb-2 text-blue-800">Condition Distribution</h3>
-                                <Pie data={conditionData} options={{ responsive: true, plugins: { title: { display: true, text: 'Condition Distribution' } } }} />
+                                <h3 className="text-xl font-medium mb-2 text-blue-800">{t('condition_distribution')}</h3>
+                                <Pie data={conditionData} options={{ responsive: true, plugins: { title: { display: true, text: t('condition_distribution') } } }} />
                             </div>
                         )}
                     </div>
 
                     {/* Table Display */}
                     <div className="overflow-x-auto">
-                        <h3 className="text-xl font-medium mb-2 text-blue-800">Detailed Results Table:</h3>
+                        <h3 className="text-xl font-medium mb-2 text-blue-800">{t('detailed_results_table')}</h3>
                         {tableData.length > 0 ? (
                             <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-sm">
                                 <thead>
                                     <tr className="bg-blue-100 text-left text-sm font-semibold text-gray-700">
                                         {results.nlp_parse.resource_type === "Patient" ? (
                                             <>
-                                                <th className="py-3 px-4 border-b">Name</th>
-                                                <th className="py-3 px-4 border-b">Age</th>
-                                                <th className="py-3 px-4 border-b">Gender</th>
-                                                <th className="py-3 px-4 border-b">Conditions</th>
+                                                <th className="py-3 px-4 border-b">{t('table_header_name')}</th>
+                                                <th className="py-3 px-4 border-b">{t('table_header_age')}</th>
+                                                <th className="py-3 px-4 border-b">{t('table_header_gender')}</th>
+                                                <th className="py-3 px-4 border-b">{t('table_header_conditions')}</th>
                                             </>
                                         ) : (
                                             <>
-                                                <th className="py-3 px-4 border-b">Patient Name</th>
-                                                <th className="py-3 px-4 border-b">Condition</th>
+                                                <th className="py-3 px-4 border-b">{t('table_header_patient_name')}</th>
+                                                <th className="py-3 px-4 border-b">{t('table_header_condition')}</th>
                                             </>
                                         )}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {/* Cast item to its expected type within the map function */}
                                     {tableData.map((item: PatientTableData | ConditionTableData, index: number) => (
                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
                                             {results.nlp_parse.resource_type === "Patient" ? (
@@ -369,7 +412,7 @@ export default function Home() {
                                 </tbody>
                             </table>
                         ) : (
-                            <p className="text-gray-600">No results found for your query.</p>
+                            <p className="text-gray-600">{t('no_results_found')}</p>
                         )}
                     </div>
                 </div>
