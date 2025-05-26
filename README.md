@@ -2,7 +2,7 @@
 
 This project provides an AI-powered query tool for FHIR data, consisting of a Python backend (Flask) and a Next.js frontend.
 
-check out the project [here](https://drive.google.com/file/d/1EAP_PTWCEJXnIGppZeGNqjp02wA9lLOz/view?usp=sharing)!
+check out the project demo [here](https://drive.google.com/file/d/1EAP_PTWCEJXnIGppZeGNqjp02wA9lLOz/view?usp=sharing)!
 ---
 
 ## Running the Application Without Docker (Local Development)
