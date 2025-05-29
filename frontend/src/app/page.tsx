@@ -41,9 +41,17 @@ interface Patient {
     conditions: string[];
 }
 
+interface ConditionResource {
+    resourceType: "Condition";
+    id: string;
+    code: { text: string };
+    subject: { reference: string; display: string };
+}
+
 interface FHIRResponse {
     resourceType: string;
-    entry: { resource: any }[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    entry: { resource: any }[]; // FIX: Moved eslint-disable-next-line here
 }
 
 interface NLPParse {
@@ -85,114 +93,6 @@ const querySuggestionKeys = [
     "suggestion_male_patients",
     "suggestion_all_patients"
 ];
-
-// --- Helper Function to Simulate Backend Response (extracted for complexity) ---
-function getSimulatedBackendResponse(naturalLanguageQuery: string): BackendResponse {
-    const nlp_parse: NLPParse = {
-        intent: "unknown_query", // Default to unknown
-        resource_type: "N/A", // Default
-        fhir_params: {},
-        simulated_fhir_request_url: "N/A",
-        original_query: naturalLanguageQuery
-    };
-    const simulated_fhir_response: FHIRResponse = {
-        resourceType: "Bundle",
-        entry: []
-    };
-
-    // Placeholder constants for conditions and patient names (replace with your actual constants)
-    const CONDITION_DIABETES_MELLITUS = "Diabetes Mellitus";
-    const CONDITION_HYPERTENSION = "Hypertension";
-    const CONDITION_ASTHMA = "Asthma";
-    const CONDITION_ARTHRITIS = "Arthritis";
-    const CONDITION_DEMENTIA = "Dementia";
-    const CONDITION_ALLERGY = "Allergy";
-    const CONDITION_ALLERGY_PENICILLIN = "Allergy to Penicillin";
-
-    const PATIENT_JOHN_DOE = "John Doe";
-    const PATIENT_JANE_SMITH = "Jane Smith";
-    const PATIENT_ROBERT_GREEN = "Robert Green";
-    const PATIENT_EMILY_WHITE = "Emily White";
-    const PATIENT_SOPHIA_BROWN = "Sophia Brown";
-    const PATIENT_WILLIAM_BLACK = "William Black";
-    const PATIENT_MARY_JONES = "Mary Jones";
-    const PATIENT_ALICE_SMITH = "Alice Smith";
-
-    const GENDER_MALE = "male";
-    const GENDER_FEMALE = "female";
-    const RESOURCE_TYPE_PATIENT = "Patient";
-    const RESOURCE_TYPE_CONDITION = "Condition";
-
-    if (naturalLanguageQuery.toLowerCase().includes("diabetic patients over 50")) {
-        nlp_parse.intent = "get_diabetic_patients_over_50";
-        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
-        nlp_parse.fhir_params = { conditions: CONDITION_DIABETES_MELLITUS, age: "50" };
-        nlp_parse.simulated_fhir_request_url = "Patient?condition=DiabetesMellitus&age=gt50";
-        simulated_fhir_response.entry = [
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p1", name: PATIENT_JOHN_DOE, age: 55, gender: GENDER_MALE, conditions: [CONDITION_DIABETES_MELLITUS, CONDITION_HYPERTENSION] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p2", name: PATIENT_JANE_SMITH, age: 62, gender: GENDER_FEMALE, conditions: [CONDITION_DIABETES_MELLITUS] } }
-        ];
-    } else if (naturalLanguageQuery.toLowerCase().includes("patients over 60 with hypertension")) {
-        nlp_parse.intent = "get_hypertensive_patients_over_60";
-        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
-        nlp_parse.fhir_params = { conditions: CONDITION_HYPERTENSION, age: "60" };
-        nlp_parse.simulated_fhir_request_url = "Patient?condition=Hypertension&age=gt60";
-        simulated_fhir_response.entry = [
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p3", name: PATIENT_ROBERT_GREEN, age: 65, gender: GENDER_MALE, conditions: [CONDITION_HYPERTENSION, CONDITION_ASTHMA] } }
-        ];
-    } else if (naturalLanguageQuery.toLowerCase().includes("female patients with asthma")) {
-        nlp_parse.intent = "get_female_patients_with_asthma";
-        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
-        nlp_parse.fhir_params = { gender: GENDER_FEMALE, conditions: CONDITION_ASTHMA };
-        simulated_fhir_response.entry = [
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p4", name: PATIENT_EMILY_WHITE, age: 30, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p5", name: PATIENT_SOPHIA_BROWN, age: 40, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA, CONDITION_ALLERGY] } }
-        ];
-    } else if (naturalLanguageQuery.toLowerCase().includes("what conditions does alice smith have?")) {
-        nlp_parse.intent = "get_patient_conditions";
-        nlp_parse.resource_type = RESOURCE_TYPE_CONDITION;
-        nlp_parse.fhir_params = { name: PATIENT_ALICE_SMITH };
-        simulated_fhir_response.entry = [
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p_alice", name: PATIENT_ALICE_SMITH, age: 45, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA, CONDITION_ALLERGY_PENICILLIN] } },
-            { resource: { resourceType: RESOURCE_TYPE_CONDITION, id: "c_asthma", code: { text: CONDITION_ASTHMA }, subject: { reference: "Patient/p_alice", display: PATIENT_ALICE_SMITH } } },
-            { resource: { resourceType: RESOURCE_TYPE_CONDITION, id: "c_allergy", code: { text: CONDITION_ALLERGY_PENICILLIN }, subject: { reference: "Patient/p_alice", display: PATIENT_ALICE_SMITH } } }
-        ];
-    } else if (naturalLanguageQuery.toLowerCase().includes("patients over 70")) {
-        nlp_parse.intent = "get_patients_over_70";
-        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
-        nlp_parse.fhir_params = { age: "70" };
-        simulated_fhir_response.entry = [
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p6", name: PATIENT_WILLIAM_BLACK, age: 75, gender: GENDER_MALE, conditions: [CONDITION_ARTHRITIS] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p7", name: PATIENT_MARY_JONES, age: 80, gender: GENDER_FEMALE, conditions: [CONDITION_DEMENTIA] } }
-        ];
-    } else if (naturalLanguageQuery.toLowerCase().includes("male patients")) {
-        nlp_parse.intent = "get_male_patients";
-        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
-        nlp_parse.fhir_params = { gender: GENDER_MALE };
-        simulated_fhir_response.entry = [
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p1", name: PATIENT_JOHN_DOE, age: 55, gender: GENDER_MALE, conditions: [CONDITION_DIABETES_MELLITUS, CONDITION_HYPERTENSION] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p3", name: PATIENT_ROBERT_GREEN, age: 65, gender: GENDER_MALE, conditions: [CONDITION_HYPERTENSION, CONDITION_ASTHMA] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p6", name: PATIENT_WILLIAM_BLACK, age: 75, gender: GENDER_MALE, conditions: [CONDITION_ARTHRITIS] } }
-        ];
-    } else if (naturalLanguageQuery.toLowerCase().includes("all patients")) {
-        nlp_parse.intent = "get_all_patients";
-        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
-        nlp_parse.fhir_params = {};
-        simulated_fhir_response.entry = [
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p1", name: PATIENT_JOHN_DOE, age: 55, gender: GENDER_MALE, conditions: [CONDITION_DIABETES_MELLITUS, CONDITION_HYPERTENSION] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p2", name: PATIENT_JANE_SMITH, age: 62, gender: GENDER_FEMALE, conditions: [CONDITION_DIABETES_MELLITUS] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p3", name: PATIENT_ROBERT_GREEN, age: 65, gender: GENDER_MALE, conditions: [CONDITION_HYPERTENSION, CONDITION_ASTHMA] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p4", name: PATIENT_EMILY_WHITE, age: 30, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p5", name: PATIENT_SOPHIA_BROWN, age: 40, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA, CONDITION_ALLERGY] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p6", name: PATIENT_WILLIAM_BLACK, age: 75, gender: GENDER_MALE, conditions: [CONDITION_ARTHRITIS] } },
-            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p7", name: PATIENT_MARY_JONES, age: 80, gender: GENDER_FEMALE, conditions: [CONDITION_DEMENTIA] } }
-        ];
-    }
-    // No 'else' needed as default values are set initially
-
-    return { nlp_parse, simulated_fhir_response };
-}
-
 
 // --- Main Home Component ---
 export default function Home() {
@@ -242,8 +142,12 @@ export default function Home() {
 
             const data: BackendResponse = await response.json();
             setResults(data); // Set the results received from the backend
-        } catch (err: any) {
-            setError(`${t('error_fetch_failed')} ${err.message}`); // Display fetch errors
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(`${t('error_fetch_failed')} ${err.message}`);
+            } else {
+                setError(`${t('error_fetch_failed')} An unknown error occurred.`);
+            }
             console.error("Error fetching data:", err);
         } finally {
             setLoading(false);
@@ -289,7 +193,7 @@ export default function Home() {
 
         const patients: Patient[] = results.simulated_fhir_response.entry
             .map(e => e.resource)
-            .filter(r => r.resourceType === "Patient"); // Ensure we only process Patient resources
+            .filter((r): r is Patient => r.resourceType === "Patient"); // Type guard for 'r'
 
         const ageGroups: { [key: string]: number } = {
             "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81+": 0
@@ -333,15 +237,15 @@ export default function Home() {
         if (results.nlp_parse.resource_type === "Patient") {
             const patients: Patient[] = results.simulated_fhir_response.entry
                 .map(e => e.resource)
-                .filter(r => r.resourceType === "Patient");
+                .filter((r): r is Patient => r.resourceType === "Patient"); // Type guard for 'r'
             patients.forEach(p => conditions = conditions.concat(p.conditions)); // Collect all conditions from patients
         } else if (results.nlp_parse.resource_type === "Condition") {
-             const conditionResources = results.simulated_fhir_response.entry
+             const conditionResources: ConditionResource[] = results.simulated_fhir_response.entry
                 .map(e => e.resource)
-                .filter(r => r.resourceType === "Condition");
+                .filter((r): r is ConditionResource => r.resourceType === "Condition"); // Type guard for 'r'
             conditions = conditionResources.map(c => c.code.text); // Collect condition text from Condition resources
         }
-        
+
         const conditionCounts: { [key: string]: number } = {};
         conditions.forEach(c => {
             conditionCounts[c] = (conditionCounts[c] ?? 0) + 1;
@@ -379,7 +283,7 @@ export default function Home() {
             // If the query was for patients, return patient details
             return results.simulated_fhir_response.entry
                 .map(e => e.resource)
-                .filter(r => r.resourceType === "Patient")
+                .filter((r): r is Patient => r.resourceType === "Patient") // Type guard for 'r'
                 .map((p: Patient): PatientTableData => ({
                     id: p.id,
                     name: p.name,
@@ -391,8 +295,8 @@ export default function Home() {
             // If the query was for conditions, return condition details with patient name
             return results.simulated_fhir_response.entry
                 .map(e => e.resource)
-                .filter(r => r.resourceType === "Condition")
-                .map((c: any): ConditionTableData => ({
+                .filter((r): r is ConditionResource => r.resourceType === "Condition") // Type guard for 'r'
+                .map((c: ConditionResource): ConditionTableData => ({ // Explicitly type 'c'
                     id: c.id,
                     patientName: c.subject?.display ?? 'N/A',
                     condition: c.code?.text ?? 'N/A'

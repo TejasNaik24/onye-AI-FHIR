@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend # Path to the frontend Dockerfile
+    ports:
+      - "3000:3000" # Expose frontend to host on port 3000
+    environment:
+      # This is crucial: Frontend connects to backend using the service name 'backend'
+      # The port 5000 is the internal container port of the backend
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:5000
+    depends_on:
+      - backend # Ensure backend starts before frontend
+    # volumes:  <-- REMOVED THIS ENTIRE SECTION FOR SIMPLICITY
+    #   # Optional: Mount frontend code for live development (remove for production)
+    #   # - ./frontend:/app
+    #   # - /app/node_modules
+    restart: always # Always restart if it crashes
+
+  backend:
+    build: ./backend # Path to the backend Dockerfile
+    ports:
+      - "5001:5000" # Expose backend to host on port 5000 (optional, but useful for testing backend directly)
+    restart: always # Always restart if it crashes
+    # volumes:  <-- I'll keep this commented out just in case you ever want it
+    #   # Optional: Mount backend code for live development (remove for production)
+    #   # - ./backend:/app
