@@ -34,7 +34,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 
 // --- Interface Definitions for Data Structure ---
 interface Patient {
-    id: string;
+    id: string; // Ensure patient ID is part of the interface
     name: string;
     age: number;
     gender: string;
@@ -59,8 +59,9 @@ interface BackendResponse {
     simulated_fhir_response: FHIRResponse;
 }
 
-// NEW INTERFACES FOR TABLE DATA
+// NEW INTERFACES FOR TABLE DATA - ADDING 'id'
 interface PatientTableData {
+    id: string; // Added for unique key
     name: string;
     age: number;
     gender: string;
@@ -68,6 +69,7 @@ interface PatientTableData {
 }
 
 interface ConditionTableData {
+    id: string; // Added for unique key (using condition ID)
     patientName: string;
     condition: string;
 }
@@ -83,6 +85,114 @@ const querySuggestionKeys = [
     "suggestion_male_patients",
     "suggestion_all_patients"
 ];
+
+// --- Helper Function to Simulate Backend Response (extracted for complexity) ---
+function getSimulatedBackendResponse(naturalLanguageQuery: string): BackendResponse {
+    const nlp_parse: NLPParse = {
+        intent: "unknown_query", // Default to unknown
+        resource_type: "N/A", // Default
+        fhir_params: {},
+        simulated_fhir_request_url: "N/A",
+        original_query: naturalLanguageQuery
+    };
+    const simulated_fhir_response: FHIRResponse = {
+        resourceType: "Bundle",
+        entry: []
+    };
+
+    // Placeholder constants for conditions and patient names (replace with your actual constants)
+    const CONDITION_DIABETES_MELLITUS = "Diabetes Mellitus";
+    const CONDITION_HYPERTENSION = "Hypertension";
+    const CONDITION_ASTHMA = "Asthma";
+    const CONDITION_ARTHRITIS = "Arthritis";
+    const CONDITION_DEMENTIA = "Dementia";
+    const CONDITION_ALLERGY = "Allergy";
+    const CONDITION_ALLERGY_PENICILLIN = "Allergy to Penicillin";
+
+    const PATIENT_JOHN_DOE = "John Doe";
+    const PATIENT_JANE_SMITH = "Jane Smith";
+    const PATIENT_ROBERT_GREEN = "Robert Green";
+    const PATIENT_EMILY_WHITE = "Emily White";
+    const PATIENT_SOPHIA_BROWN = "Sophia Brown";
+    const PATIENT_WILLIAM_BLACK = "William Black";
+    const PATIENT_MARY_JONES = "Mary Jones";
+    const PATIENT_ALICE_SMITH = "Alice Smith";
+
+    const GENDER_MALE = "male";
+    const GENDER_FEMALE = "female";
+    const RESOURCE_TYPE_PATIENT = "Patient";
+    const RESOURCE_TYPE_CONDITION = "Condition";
+
+    if (naturalLanguageQuery.toLowerCase().includes("diabetic patients over 50")) {
+        nlp_parse.intent = "get_diabetic_patients_over_50";
+        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
+        nlp_parse.fhir_params = { conditions: CONDITION_DIABETES_MELLITUS, age: "50" };
+        nlp_parse.simulated_fhir_request_url = "Patient?condition=DiabetesMellitus&age=gt50";
+        simulated_fhir_response.entry = [
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p1", name: PATIENT_JOHN_DOE, age: 55, gender: GENDER_MALE, conditions: [CONDITION_DIABETES_MELLITUS, CONDITION_HYPERTENSION] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p2", name: PATIENT_JANE_SMITH, age: 62, gender: GENDER_FEMALE, conditions: [CONDITION_DIABETES_MELLITUS] } }
+        ];
+    } else if (naturalLanguageQuery.toLowerCase().includes("patients over 60 with hypertension")) {
+        nlp_parse.intent = "get_hypertensive_patients_over_60";
+        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
+        nlp_parse.fhir_params = { conditions: CONDITION_HYPERTENSION, age: "60" };
+        nlp_parse.simulated_fhir_request_url = "Patient?condition=Hypertension&age=gt60";
+        simulated_fhir_response.entry = [
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p3", name: PATIENT_ROBERT_GREEN, age: 65, gender: GENDER_MALE, conditions: [CONDITION_HYPERTENSION, CONDITION_ASTHMA] } }
+        ];
+    } else if (naturalLanguageQuery.toLowerCase().includes("female patients with asthma")) {
+        nlp_parse.intent = "get_female_patients_with_asthma";
+        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
+        nlp_parse.fhir_params = { gender: GENDER_FEMALE, conditions: CONDITION_ASTHMA };
+        simulated_fhir_response.entry = [
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p4", name: PATIENT_EMILY_WHITE, age: 30, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p5", name: PATIENT_SOPHIA_BROWN, age: 40, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA, CONDITION_ALLERGY] } }
+        ];
+    } else if (naturalLanguageQuery.toLowerCase().includes("what conditions does alice smith have?")) {
+        nlp_parse.intent = "get_patient_conditions";
+        nlp_parse.resource_type = RESOURCE_TYPE_CONDITION;
+        nlp_parse.fhir_params = { name: PATIENT_ALICE_SMITH };
+        simulated_fhir_response.entry = [
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p_alice", name: PATIENT_ALICE_SMITH, age: 45, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA, CONDITION_ALLERGY_PENICILLIN] } },
+            { resource: { resourceType: RESOURCE_TYPE_CONDITION, id: "c_asthma", code: { text: CONDITION_ASTHMA }, subject: { reference: "Patient/p_alice", display: PATIENT_ALICE_SMITH } } },
+            { resource: { resourceType: RESOURCE_TYPE_CONDITION, id: "c_allergy", code: { text: CONDITION_ALLERGY_PENICILLIN }, subject: { reference: "Patient/p_alice", display: PATIENT_ALICE_SMITH } } }
+        ];
+    } else if (naturalLanguageQuery.toLowerCase().includes("patients over 70")) {
+        nlp_parse.intent = "get_patients_over_70";
+        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
+        nlp_parse.fhir_params = { age: "70" };
+        simulated_fhir_response.entry = [
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p6", name: PATIENT_WILLIAM_BLACK, age: 75, gender: GENDER_MALE, conditions: [CONDITION_ARTHRITIS] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p7", name: PATIENT_MARY_JONES, age: 80, gender: GENDER_FEMALE, conditions: [CONDITION_DEMENTIA] } }
+        ];
+    } else if (naturalLanguageQuery.toLowerCase().includes("male patients")) {
+        nlp_parse.intent = "get_male_patients";
+        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
+        nlp_parse.fhir_params = { gender: GENDER_MALE };
+        simulated_fhir_response.entry = [
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p1", name: PATIENT_JOHN_DOE, age: 55, gender: GENDER_MALE, conditions: [CONDITION_DIABETES_MELLITUS, CONDITION_HYPERTENSION] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p3", name: PATIENT_ROBERT_GREEN, age: 65, gender: GENDER_MALE, conditions: [CONDITION_HYPERTENSION, CONDITION_ASTHMA] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p6", name: PATIENT_WILLIAM_BLACK, age: 75, gender: GENDER_MALE, conditions: [CONDITION_ARTHRITIS] } }
+        ];
+    } else if (naturalLanguageQuery.toLowerCase().includes("all patients")) {
+        nlp_parse.intent = "get_all_patients";
+        nlp_parse.resource_type = RESOURCE_TYPE_PATIENT;
+        nlp_parse.fhir_params = {};
+        simulated_fhir_response.entry = [
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p1", name: PATIENT_JOHN_DOE, age: 55, gender: GENDER_MALE, conditions: [CONDITION_DIABETES_MELLITUS, CONDITION_HYPERTENSION] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p2", name: PATIENT_JANE_SMITH, age: 62, gender: GENDER_FEMALE, conditions: [CONDITION_DIABETES_MELLITUS] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p3", name: PATIENT_ROBERT_GREEN, age: 65, gender: GENDER_MALE, conditions: [CONDITION_HYPERTENSION, CONDITION_ASTHMA] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p4", name: PATIENT_EMILY_WHITE, age: 30, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p5", name: PATIENT_SOPHIA_BROWN, age: 40, gender: GENDER_FEMALE, conditions: [CONDITION_ASTHMA, CONDITION_ALLERGY] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p6", name: PATIENT_WILLIAM_BLACK, age: 75, gender: GENDER_MALE, conditions: [CONDITION_ARTHRITIS] } },
+            { resource: { resourceType: RESOURCE_TYPE_PATIENT, id: "p7", name: PATIENT_MARY_JONES, age: 80, gender: GENDER_FEMALE, conditions: [CONDITION_DEMENTIA] } }
+        ];
+    }
+    // No 'else' needed as default values are set initially
+
+    return { nlp_parse, simulated_fhir_response };
+}
+
 
 // --- Main Home Component ---
 export default function Home() {
@@ -113,9 +223,10 @@ export default function Home() {
         setShowSuggestions(false); // Hide suggestions when submitting
 
         try {
-            // Make POST request to your Flask backend.
-            // Ensure your backend is running on http://127.0.0.1:5000/
-            const response = await fetch('http://127.0.0.1:5000/query', {
+            // Use environment variable for the backend URL
+            // Ensure NEXT_PUBLIC_BACKEND_URL is defined in your .env.local file
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://127.0.0.1:5000';
+            const response = await fetch(`${backendUrl}/query`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -185,11 +296,19 @@ export default function Home() {
         };
 
         patients.forEach(p => {
-            if (p.age <= 20) ageGroups["0-20"]++;
-            else if (p.age <= 40) ageGroups["21-40"]++;
-            else if (p.age <= 60) ageGroups["41-60"]++;
-            else if (p.age <= 80) ageGroups["61-80"]++;
-            else ageGroups["81+"]++;
+            let ageGroupKey: string; // FIX: Extracted nested ternary into if/else if
+            if (p.age <= 20) {
+                ageGroupKey = "0-20";
+            } else if (p.age <= 40) {
+                ageGroupKey = "21-40";
+            } else if (p.age <= 60) {
+                ageGroupKey = "41-60";
+            } else if (p.age <= 80) {
+                ageGroupKey = "61-80";
+            } else {
+                ageGroupKey = "81+";
+            }
+            ageGroups[ageGroupKey] = (ageGroups[ageGroupKey] ?? 0) + 1;
         });
 
         return {
@@ -225,7 +344,7 @@ export default function Home() {
         
         const conditionCounts: { [key: string]: number } = {};
         conditions.forEach(c => {
-            conditionCounts[c] = (conditionCounts[c] || 0) + 1; // Count occurrences of each condition
+            conditionCounts[c] = (conditionCounts[c] ?? 0) + 1;
         });
 
         // Define a set of colors for the pie chart slices
@@ -262,10 +381,11 @@ export default function Home() {
                 .map(e => e.resource)
                 .filter(r => r.resourceType === "Patient")
                 .map((p: Patient): PatientTableData => ({
+                    id: p.id,
                     name: p.name,
                     age: p.age,
                     gender: p.gender,
-                    conditions: p.conditions.join(', ') // Join conditions into a single string
+                    conditions: p.conditions.join(', ')
                 }));
         } else if (results.nlp_parse.resource_type === "Condition") {
             // If the query was for conditions, return condition details with patient name
@@ -273,8 +393,9 @@ export default function Home() {
                 .map(e => e.resource)
                 .filter(r => r.resourceType === "Condition")
                 .map((c: any): ConditionTableData => ({
-                    patientName: c.subject?.display || 'N/A',
-                    condition: c.code?.text || 'N/A'
+                    id: c.id,
+                    patientName: c.subject?.display ?? 'N/A',
+                    condition: c.code?.text ?? 'N/A'
                 }));
         }
         return []; // Return empty array if no relevant data
@@ -288,12 +409,12 @@ export default function Home() {
             <h1 className="text-4xl font-bold mb-8 text-blue-700">{t('title')}</h1>
 
             {/* Language Selector */}
-            <div className="mb-4 self-end"> {/* self-end to push it to the right */}
+            <div className="mb-4 self-end">
                 <label htmlFor="locale-select" className="mr-2 text-gray-700">{t('language')}:</label>
                 <select id="locale-select" value={currentLocale} onChange={handleLocaleChange} className="p-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="en">English</option>
                     <option value="es">Español</option>
-                    <option value="fr">Français</option> {/* Added French option */}
+                    <option value="fr">Français</option>
                 </select>
             </div>
 
@@ -312,15 +433,17 @@ export default function Home() {
                 />
                 {showSuggestions && filteredSuggestions.length > 0 && (
                     <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg suggestions-list">
-                        {filteredSuggestions.map((suggestion, index) => (
-                            <li
-                                key={index}
-                                className="p-3 hover:bg-blue-100 cursor-pointer border-b border-gray-200 last:border-b-0"
+                        {filteredSuggestions.map((suggestion) => (
+                            <button // FIX: Changed li to button
+                                key={suggestion}
+                                type="button" // Important for buttons not in a form
+                                className="p-3 hover:bg-blue-100 cursor-pointer border-b border-gray-200 last:border-b-0 w-full text-left" // Added w-full text-left for styling
                                 onClick={() => handleSuggestionClick(suggestion)}
+                                // role, tabIndex, and onKeyDown are now handled natively by <button>
                             >
                                 {/* Display the already translated suggestion */}
                                 {suggestion}
-                            </li>
+                            </button>
                         ))}
                     </ul>
                 )}
@@ -329,7 +452,7 @@ export default function Home() {
                     className="mt-4 w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 text-lg"
                     disabled={loading}
                 >
-                    {loading ? t('processing_button') : t('submit_button')} {/* Use translated button text */}
+                    {loading ? t('processing_button') : t('submit_button')}
                 </button>
             </form>
 
@@ -392,8 +515,8 @@ export default function Home() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {tableData.map((item: PatientTableData | ConditionTableData, index: number) => (
-                                        <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
+                                    {tableData.map((item: PatientTableData | ConditionTableData) => (
+                                        <tr key={item.id} className="border-b border-gray-200 hover:bg-gray-50">
                                             {results.nlp_parse.resource_type === "Patient" ? (
                                                 <>
                                                     <td className="py-3 px-4">{(item as PatientTableData).name}</td>
