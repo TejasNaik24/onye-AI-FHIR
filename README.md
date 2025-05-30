@@ -2,10 +2,10 @@
 
 This project provides an AI-powered query tool for FHIR data, consisting of a Python backend (Flask) and a Next.js frontend.
 
-check out the project demo [here](https://drive.google.com/file/d/1EAP_PTWCEJXnIGppZeGNqjp02wA9lLOz/view?usp=sharing)!
+Check out the project demo [here](https://drive.google.com/file/d/1EAP_PTWCEJXnIGppZeGNqjp02wA9lLOz/view?usp=sharing)!
 ---
 
-## Running the Application Without Docker (Local Development)
+## Running the Application
 
 This guide explains how to set up and run the frontend and backend services directly on your local machine for development purposes.
 
@@ -17,9 +17,10 @@ Before you start, ensure you have the following installed on your system:
     * [Download Python](https://www.python.org/downloads/)
 * **Node.js (LTS version recommended) and npm/yarn**:
     * [Download Node.js](https://nodejs.org/en/download/) (npm is installed with Node.js)
-    * [Install Yarn (optional, but used in some commands)](https://yarnpkg.com/getting-started/install)
 * **Git**:
     * [Download Git](https://git-scm.com/downloads) (usually pre-installed on macOS/Linux)
+* **Docker**:
+    * [Download Docker](https://www.docker.com) (needed for downloading libraries/dependencies)
 
 ### 1. Clone the Repository
 You can follow this [video](https://drive.google.com/file/d/1WdDehCanRc4PiICoQSawgFukOykdHKO6/view?usp=sharing) here for the setup or read below:
@@ -27,117 +28,40 @@ You can follow this [video](https://drive.google.com/file/d/1WdDehCanRc4PiICoQSa
 First, open your terminal or command prompt and clone the project repository:
 
 ```bash
-git clone https://github.com/TejasNaik24/onye-AI-FHIR # Replace with the actual URL of your Git repository
-cd ONYE-AI-FHIR # Navigate into the project's root directory
+git clone https://github.com/TejasNaik24/onye-AI-FHIR
 ```
 
-### 2. Set Up and Run the Backend
+### 2. Create an env file
 
-The backend is a Flask application that handles the AI query logic and interacts with FHIR data.
+**IMPORTANT** The .env file is not pushed to GitHub, so you must create the file yourself using the example file.
 
-#### Install Python Dependencies
 
-1.  Navigate into the `backend` directory:
-    ```bash
-    cd backend
-    ```
-2.  **Create a Python virtual environment (Highly Recommended)**:
-    This isolates your project's dependencies from other Python projects.
-    ```bash
-    python3 -m venv venv
-    ```
-3.  **Activate the virtual environment**:
-    * **On macOS/Linux**:
-        ```bash
-        source venv/bin/activate
-        ```
-    * **On Windows (Command Prompt)**:
-        ```bash
-        venv\Scripts\activate.bat
-        ```
-    * **On Windows (PowerShell)**:
-        ```bash
-        .\venv\Scripts\Activate.ps1
-        ```
-    (You'll know it's active when `(venv)` appears before your terminal prompt.)
+1.  Navigate into the `frontend` directory:
 
-4.  **Install the required Python packages**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-5.  **Download the spaCy English language model**:
-    This model is necessary for the AI processing.
-    ```bash
-    python -m spacy download en_core_web_sm
-    ```
+2.  Create a new file in the frontend directory and name it .env.local.
 
-#### Run the Backend Server
+3.  Then paste the line:
 
-While still in the `backend` directory and with your virtual environment activated:
+   ``` bash
+NEXT_PUBLIC_BACKEND_URL=http://localhost:5001
+```
+In the file, just like the example .env file.
+
+### 3. Run Dockerfile for installing libraries and dependencies
+
+1. Now, just run the command:
+``` bash
+docker-compose up --build
+```
+This will then install everything needed and will automatically start the backend and frontend
+
+**Then simply go to**:
 
 ```bash
-python main.py
+http://localhost:3000
 ```
-This will start the Flask backend server, typically on `http://127.0.0.1:5001`. Keep this terminal window open and running.
 
-### 3. Set Up and Run the Frontend
+**This will have the full project here and running.**
 
-The frontend is a Next.js application that provides the user interface for the query tool.
+Note: The Flask backend service in this project is consistently configured to run on port 5000. When running locally with Docker Compose, you can access the backend in your browser at **http://localhost:5000**, and the frontend communicates with it internally at **http://backend:5000** within the Docker network. Please make sure you don't have any other ports on this one running.
 
-#### Install Node.js Dependencies
-
-1.  Navigate into the `frontend` directory. If you're in the `backend` directory, go up one level then into `frontend`:
-    ```bash
-    cd ../frontend
-    ```
-    (Alternatively, if you're already in the project root: `cd frontend`)
-
-2.  **Install the Node.js packages**. You can use either `npm` (Node Package Manager) or `yarn`:
-
-    * **Using npm**:
-        ```bash
-        npm install
-        ```
-    * **Using yarn**:
-        ```bash
-        yarn install # Use --frozen-lockfile if you have a yarn.lock file and want exact dependencies
-        ```
-
-#### Configure Backend URL for Frontend
-
-The frontend needs to know the address of the backend. When running locally without Docker, the frontend will call `localhost`.
-
-1.  Open or create a file named `.env.local` in your `frontend` directory.
-2.  Add or update the following line in the `.env.local` file:
-    ```dotenv
-    NEXT_PUBLIC_BACKEND_URL=http://localhost:5001
-    ```
-    *Note: I use port `5001` for the backend here to avoid potential conflicts with other services that might use `5000` by default. Your backend's `main.py` should be configured to listen on this port.*
-
-#### Run the Frontend Development Server
-
-While still in the `frontend` directory:
-
-* **Using npm**:
-    ```bash
-    npm run dev
-    ```
-* **Using yarn**:
-    ```bash
-    yarn dev
-    ```
-This will start the Next.js development server, usually on `http://localhost:3000`. Keep this terminal window open and running.
-
-### 4. Access the Application
-
-Once both the backend and frontend servers are running successfully (each in their own terminal window), open your web browser and navigate to:
-
-`http://localhost:3000`
-
-You should now be able to interact with the AI on FHIR Query Tool.
-
----
-
-### Future Development
-
-This project includes Dockerfiles for containerization. I plan to further refine and document the `docker-compose.yml` setup for easier deployment and streamlined development environments using Docker in the future.
