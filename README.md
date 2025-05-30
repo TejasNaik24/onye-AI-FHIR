@@ -23,7 +23,7 @@ Before you start, ensure you have the following installed on your system:
     * [Download Docker](https://www.docker.com) (needed for downloading libraries/dependencies)
 
 ### 1. Clone the Repository
-You can follow this [video](https://drive.google.com/file/d/1WdDehCanRc4PiICoQSawgFukOykdHKO6/view?usp=sharing) here for the setup or read below:
+You can follow this [video](https://drive.google.com/file/d/1ybH3OjKOu-SZf712gs6tfMlF6ktJrqVz/view?usp=sharing) here for the setup or read below:
 
 First, open your terminal or command prompt and clone the project repository:
 
